@@ -1,0 +1,181 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    {% block title %}
+    {% endblock %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1c1c1c;
+            color: #e5e5e5;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .navbar {
+            background-color: #2b2b2b;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: #d9534f !important;
+        }
+
+        .navbar a {
+            color: #f0ad4e;
+        }
+
+        .navbar a:hover {
+            color: #fff !important;
+        }
+
+        .btn-outline-success {
+            color: #f0ad4e;
+            border-color: #f0ad4e;
+        }
+
+        .btn-outline-success:hover {
+            background-color: #f0ad4e;
+            border-color: #f0ad4e;
+            color: #343a40;
+        }
+
+        .img-thumbnail {
+            border-radius: 50%;
+            border: 2px solid #d9534f;
+        }
+
+        h2 {
+            border-bottom: 2px solid #d9534f;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            font-weight: bold;
+            background-color: #444;
+            animation: pulse 2s infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .badge:hover {
+            transform: rotate(10deg);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .list-group-item {
+            background-color: #3a3a3a;
+            color: #e5e5e5;
+            border: none;
+        }
+
+        .list-group-item a {
+            color: #f0ad4e;
+        }
+
+        .list-group-item a:hover {
+            text-decoration: underline;
+        }
+
+        textarea {
+            resize: none;
+            background-color: #4a4a4a;
+            color: #e5e5e5;
+            border: 1px solid #555;
+        }
+
+        input[type="search"] {
+            background-color: #4a4a4a;
+            color: #e5e5e5;
+            border: 1px solid #555;
+        }
+
+        input[type="search"]::placeholder {
+            color: #aaa;
+        }
+
+        @keyframes rainbow {
+            0% { color: red; }
+            14% { color: orange; }
+            28% { color: yellow; }
+            42% { color: green; }
+            57% { color: blue; }
+            71% { color: indigo; }
+            85% { color: violet; }
+            100% { color: red; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+            <a class="navbar-brand" href=" {% url 'QuestionsList' %} ">AskPerdun</a>
+            <form class="form-inline my-2 my-lg-0 d-flex gap-1">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Ask</button>
+            </form>
+            <div class="d-flex gap-2 align-items-center">
+                <img src="{% static '/img/photo.jpg' %}" alt="Avatar" class="img-thumbnail"
+                     style="width: 50px; height: 50px; padding: 0">
+                <div>
+                    <div style="animation: rainbow 5s infinite;">
+                        KibePerdun
+                    </div>
+                    <a href=" {% url 'Settings' %} " class="text-warning">Settings</a>
+                    <a href="#" class="text-warning">Log out</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<main class="container mt-5">
+    {% block content_name %}
+    {% endblock %}
+    <div class="row mt-5">
+        {% block content %}
+        {% endblock %}
+        <div class="col">
+            <section class="mb-3">
+                <h2>Popular Tags</h2>
+                <div style="margin-bottom: 20px;">
+                    <span class="badge bg-primary">Primary</span>
+                    <span class="badge bg-secondary" style="margin-right: 10px;">Secondary</span>
+                    <span class="badge bg-success">Success</span>
+                    <span class="badge bg-danger">Danger</span>
+                    <span class="badge bg-warning text-dark">Warning</span>
+                    <span class="badge bg-info text-dark">Info</span>
+                    <span class="badge bg-light text-dark">Light</span>
+                    <span class="badge bg-dark">Dark</span>
+                </div>
+            </section>
+            <section>
+                <h2>Best Members</h2>
+                <div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a href="#">Member</a></li>
+                        <li class="list-group-item"><a href="#">Member</a></li>
+                        <li class="list-group-item"><a href="#">Member</a></li>
+                        <li class="list-group-item"><a href="#">Member</a></li>
+                        <li class="list-group-item"><a href="#">Member</a></li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+</body>
+</html>

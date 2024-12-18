@@ -1,0 +1,77 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}
+    <title>Ask a Question</title>
+{% endblock %}
+
+{% block content_name %}
+    <h1 class="text-center mb-4">Submit Your Question</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <form action="#" method="POST" class="shadow-lg p-5 rounded" style="background-color: #2e2e2e;">
+                    <div class="form-group mb-4">
+                        <label for="question-title" class="text-warning">Title</label>
+                        <input type="text" class="form-control bg-dark text-white border-warning" id="question-title" name="title" placeholder="Enter the title of your question">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="question-text" class="text-warning">Details</label>
+                        <textarea class="form-control bg-dark text-white border-warning" id="question-text" name="text" rows="5" placeholder="Describe your question in detail"></textarea>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="question-tags" class="text-warning">Tags</label>
+                        <input type="text" class="form-control bg-dark text-white border-warning" id="question-tags" name="tags" placeholder="Add tags, separated by commas">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-warning btn-lg px-5">Поделиться вопросом</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<style>
+    body {
+        background-color: #121212;
+        color: #e5e5e5;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    h1 {
+        color: #f39c12;
+        font-weight: 700;
+    }
+
+    label {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-control {
+        border-radius: 0;
+        border-width: 2px;
+    }
+
+    .btn-warning {
+        color: #121212;
+        background-color: #f39c12;
+        border: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .btn-warning:hover {
+        background-color: #e67e22;
+        color: #ffffff;
+    }
+
+    .shadow-lg {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
+

@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}
+    <title>{{ question.title }}</title>
+{% endblock %}
+
+{% block content %}
+    <div class="col-9" style="height: 70vh;">
+        {% include 'layouts/question.html' %}
+
+        <div>
+            <h4>Answers</h4>
+            {% for answer in question.answers.all %}
+                <div class="card w-100 mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-3 d-flex align-items-center">
+                                <div class="border mb-2" style="height: 100px; width: 100px; overflow: hidden; border-radius: 50%;">
+                                    <img src="{{ answer.author.profile.avatar|default:'/static/img/default-avatar.png' }}"
+                                         alt="Avatar" class="img-fluid"
+                                         style="object-fit: cover; height: 100%; width: 100%;">
+                                </div>
+                            </div>
+
+                            <div class="col-9">
+                                <p class="card-text">{{ answer.text }}</p>
+                                <small>By {{ answer.author.username }} on {{ answer.created_at }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>Пока нет ответа, стань первым!</p>
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        <form action="#" method="POST" class="d-flex flex-column gap-2 h-100">
+            <div class="input-group flex-nowrap flex-grow-3">
+                <textarea class="form-control" name="title" placeholder="Поле ввода ответа.."
+                          aria-label="Title" aria-describedby="addon-wrapping-title"></textarea>
+            </div>
+            <div>
+                <button class="btn btn-outline-success" type="submit">Поделиться ответом</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

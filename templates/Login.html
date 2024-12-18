@@ -1,0 +1,55 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}
+    <title>Login</title>
+{% endblock %}
+
+{% block content_name %}
+    <h1 class="text-center mb-4">Log in</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <form action="#" method="POST" class="shadow p-4 rounded" style="background-color: #2e2e2e;">
+                    <div id="error-message" class="text-danger mb-3" style="display: none;">Sorry, wrong password!</div>
+                    <div class="form-group mb-4">
+                        <label for="login" class="text-light">Login</label>
+                        <input type="text" class="form-control bg-dark text-white border-light" id="login" name="login" placeholder="Enter your login here" oninput="hideErrorMessage()">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="password" class="text-light">Password</label>
+                        <input type="password" class="form-control bg-dark text-white border-light" id="password" name="password" placeholder="******" oninput="hideErrorMessage()">
+                    </div>
+                    <div class="text-center mb-3">
+                        <button type="submit" class="btn btn-warning btn-lg w-100">Log in!</button>
+                    </div>
+                    <div class="text-center">
+                        <a href="#" class="text-warning">Create new account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function hideErrorMessage() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        document.querySelector('form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+
+            if (login === 'test' && password === '1234') {
+                alert('Login successful');
+            } else {
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+{% endblock %}
+

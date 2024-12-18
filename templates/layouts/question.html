@@ -1,0 +1,31 @@
+{% load static %}
+
+<div class="row mb-3">
+    <div class="col-3 d-flex flex-column">
+        <div class="border mb-2" style="height: 100px; width: 100%; overflow: hidden;">
+            <img src="{{ question.author.profile.avatar|default:'/static/img/default-avatar.png' }}"
+                 alt="Avatar" class="img-fluid"
+                 style="object-fit: cover; object-position: center; height: 100%; width: 100%;">
+        </div>
+
+        <input type="number" class="form-control" style="width: 100%;"
+               value="{{ question.likes.count }}"
+               placeholder="likes">
+    </div>
+
+    <div class="col-9 d-flex flex-column gap-2">
+        <h5>
+            <a href="{{ question.get_absolute_url }}">{{ question.title }}</a>
+        </h5>
+        <p class="card-text">{{ question.text|truncatewords:50 }}</p>
+        <div class="d-flex gap-5">
+            <div>
+                <strong>Tags:</strong>
+                {% for tag in question.tags.all %}
+                    <a href="#" class="badge bg-primary">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<hr>
