@@ -2,32 +2,44 @@
 {% load static %}
 
 {% block title %}
-    <title>Ask a Question</title>
+<title>Задать вопрос</title>
 {% endblock %}
 
 {% block content_name %}
-    <h1 class="text-center mb-4">Submit Your Question</h1>
+<h1 class="text-center mb-4">✍ Задать новый вопрос</h1>
 {% endblock %}
 
 {% block content %}
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-lg-8 col-md-10">
-                <form action="#" method="POST" class="shadow-lg p-5 rounded" style="background-color: #2e2e2e;">
+                <form class="shadow-lg p-5 rounded" id="question-form" method="POST" style="background-color: #2e2e2e;">
+                    {% csrf_token %}
+
                     <div class="form-group mb-4">
-                        <label for="question-title" class="text-warning">Title</label>
-                        <input type="text" class="form-control bg-dark text-white border-warning" id="question-title" name="title" placeholder="Enter the title of your question">
+                        <label class="text-warning" for="question-title">📌 Заголовок</label>
+                        <input class="form-control bg-dark text-white border-warning" id="question-title" name="title"
+                               placeholder="Введите заголовок вопроса" required type="text">
                     </div>
+
                     <div class="form-group mb-4">
-                        <label for="question-text" class="text-warning">Details</label>
-                        <textarea class="form-control bg-dark text-white border-warning" id="question-text" name="text" rows="5" placeholder="Describe your question in detail"></textarea>
+                        <label class="text-warning" for="question-text">📝 Подробности</label>
+                        <textarea class="form-control bg-dark text-white border-warning" id="question-text" name="text"
+                                  placeholder="Опишите ваш вопрос подробно" required rows="5"></textarea>
                     </div>
+
                     <div class="form-group mb-4">
                         <label for="question-tags" class="text-warning">Tags</label>
-                        <input type="text" class="form-control bg-dark text-white border-warning" id="question-tags" name="tags" placeholder="Add tags, separated by commas">
+                        <input class="form-control bg-dark text-white border-warning" id="question-tags" name="tags"
+                               placeholder="Введите теги..." type="text">
+                        <div class="bg-dark text-white p-2 rounded shadow-lg position-absolute" id="tag-suggestions"
+                             style="display: none; max-width: 100%; z-index: 1000;">
+                        </div>
                     </div>
+
+
                     <div class="text-center">
-                        <button type="submit" class="btn btn-warning btn-lg px-5">Поделиться вопросом</button>
+                        <button class="btn btn-warning btn-lg px-5" type="submit">🚀 Опубликовать вопрос</button>
                     </div>
                 </form>
             </div>
@@ -72,6 +84,22 @@
     .shadow-lg {
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
+
+    /* Стилизация подсказок тегов */
+    .ui-autocomplete {
+        background: #2e2e2e;
+        border: 1px solid #444;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .ui-menu-item {
+        padding: 8px;
+        color: #f39c12;
+        cursor: pointer;
+    }
+
+    .ui-menu-item:hover {
+        background: #444;
+    }
 </style>
-
-

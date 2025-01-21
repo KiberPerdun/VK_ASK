@@ -1,31 +1,67 @@
 {% load static %}
 
-<div class="row mb-3">
-    <div class="col-3 d-flex flex-column">
-        <div class="border mb-2" style="height: 100px; width: 100%; overflow: hidden;">
-            <img src="{{ question.author.profile.avatar|default:'/static/img/default-avatar.png' }}"
-                 alt="Avatar" class="img-fluid"
-                 style="object-fit: cover; object-position: center; height: 100%; width: 100%;">
-        </div>
+<div class="p-3 mb-3 shadow rounded border border-secondary" style="background: transparent;">
+  <div class="row mb-2 align-items-center">
+    <div class="col-md-3 text-center">
+      <div class="rounded-circle overflow-hidden mx-auto mb-2"
+           style="width: 90px; height: 90px; border: 2px solid #aaa;">
+        <img alt="Avatar"
+             class="img-fluid" src="{{ question.author.profile.avatar|default:'/static/img/photo.jpg' }}"
+             style="object-fit: cover; width: 100%; height: 100%;">
+      </div>
 
-        <input type="number" class="form-control" style="width: 100%;"
-               value="{{ question.likes.count }}"
-               placeholder="likes">
+      <div class="small text-muted mb-2">
+        <strong>{{ question.author.username }}</strong><br>
+        <span class="text-secondary">Вопросов: {{ question.author.questions.count }}</span>
+      </div>
+
+      <div class="mb-2">
+        <span class="badge bg-success me-1" id="likes-count-{{ question.id }}">
+          👍 {{ question.likes_count|default:"0" }}
+        </span>
+        <span class="badge bg-danger me-1" id="dislikes-count-{{ question.id }}">
+          👎 {{ question.dislikes_count|default:"0" }}
+        </span>
+        <span class="badge bg-warning me-1" id="like-diff-{{ question.id }}">
+          🤝 {{ question.like_difference|default:"0" }}
+        </span>
+      </div>
+
+      {% if user.is_authenticated %}
+      <button class="btn btn-sm btn-outline-success like-btn"
+              data-like-type="like" data-qid="{{ question.id }}">
+        👍 Лайк
+      </button>
+      <button class="btn btn-sm btn-outline-danger dislike-btn"
+              data-like-type="dislike" data-qid="{{ question.id }}">
+        👎 Дизлайк
+      </button>
+      {% endif %}
     </div>
 
-    <div class="col-9 d-flex flex-column gap-2">
-        <h5>
-            <a href="{{ question.get_absolute_url }}">{{ question.title }}</a>
-        </h5>
-        <p class="card-text">{{ question.text|truncatewords:50 }}</p>
-        <div class="d-flex gap-5">
-            <div>
-                <strong>Tags:</strong>
-                {% for tag in question.tags.all %}
-                    <a href="#" class="badge bg-primary">{{ tag.name }}</a>
-                {% endfor %}
-            </div>
-        </div>
+    <div class="col-md-9">
+      <h5 class="fw-bold mb-2">
+        <a class="text-decoration-none text-light" href="{{ question.get_absolute_url }}">
+          {{ question.title }}
+        </a>
+      </h5>
+
+      <p class="text-muted small mb-2">
+        {{ question.text|truncatewords:50 }}
+      </p>
+
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        {% for tag in question.tags.all %}
+        <a class="badge bg-primary text-white text-decoration-none"
+           href="{% url 'QuestionsList' %}?tag={{ tag.name }}{% if sort %}&sort={{ sort }}{% endif %}">
+          #{{ tag.name }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="small text-muted">
+        Опубликовано: {{ question.created_at|date:"d M Y" }}
+      </div>
     </div>
+  </div>
 </div>
-<hr>

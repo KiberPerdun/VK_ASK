@@ -14,18 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
 from app import views
+from app import views_ajax
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.QuestionsList, name='QuestionsList'),
-    path('settings', views.Settings, name='Settings'),
+                  path('settings/', views.Settings, name='Settings'),
     path('ask', views.Ask, name='Ask'),
-    path('login', views.Login, name='Login'),
-    path('reg', views.Register, name='Register'),
+                  path('login/', views.Login, name='Login'),
+                  path('reg/', views.Register, name='Register'),
     path('tag/perdun', views.ListByTag, name='ListBytag'),
     path('question/<int:question_id>/', views.SingleQuestion, name='SingleQuestion'),
-]
+                  path('logout', views.Logout, name='Logout'),
+
+                  path('ajax/toggle_like/', views_ajax.toggle_like, name='toggle_like'),
+                  path('ajax/mark_correct/', views_ajax.mark_correct, name='mark_correct'),
+                  path('question/<int:question_id>/post_answer/', views_ajax.post_answer, name='post_answer'),
+                  path("question/<int:question_id>/get_likes_data/", views_ajax.get_likes_data, name="get_likes_data"),
+                  path("get_tags/", views_ajax.get_tags, name="get_tags"),
+                  path("add_tag/", views_ajax.add_tag, name="add_tag"),
+                  path("submit_question/", views_ajax.submit_question, name="submit_question"),
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

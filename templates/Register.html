@@ -11,68 +11,9 @@
 
 {% block content %}
     <div class="col-9 d-flex flex-column gap-2" style="height: 70vh;">
-        <form action="#" method="POST" class="d-flex flex-column gap-2 h-100">
-            <div class="row align-items-center">
-                <div class="col-3 w-30">
-                    Login
-                </div>
-                <div class="col-9 w-50">
-                    <input class="form-control mr-sm-2" type="search" placeholder="KiberPerdun"
-                           aria-label="Login">
-                </div>
-            </div>
-            <div class="row align-items-center mt-2">
-                <div class="col-3 w-30">
-                    Email
-                </div>
-                <div class="col-9 w-50">
-                    <input class="form-control mr-sm-2" type="search" placeholder="kiberperdun@mail.ru"
-                           aria-label="Email">
-                </div>
-            </div>
-            <div class="row align-items-center mt-2">
-                <div class="col-3 w-30">
-                    NickName
-                </div>
-                <div class="col-9 w-50">
-                    <input class="form-control mr-sm-2" type="search" placeholder="KiberPerdun"
-                           aria-label="NickName">
-                </div>
-            </div>
-            <div class="row align-items-center mt-2">
-                <div class="col-3 w-30">
-                    Password
-                </div>
-                <div class="col-9 w-50">
-                    <input class="form-control mr-sm-2" type="password" placeholder="******"
-                           aria-label="Password">
-                </div>
-            </div>
-            <div class="row align-items-center mt-2">
-                <div class="col-3 w-30">
-                    Repeat Password
-                </div>
-                <div class="col-9 w-50">
-                    <input class="form-control mr-sm-2" type="password" placeholder="******"
-                           aria-label="Repeat Password">
-                </div>
-            </div>
-            <div class="row align-items-center">
-                <div class="col-3 w-30">
-                    Upload avatar
-                </div>
-                <div class="col-9">
-                    <div class="input-group mt-2 w-50">
-                        <!-- Путь до файла -->
-                        <input type="text" class="form-control bg-white" placeholder="Choose file..." readonly
-                               id="file-path">
-
-                        <!-- Кнопка выбора файла -->
-                        <label class="input-group-text btn btn-outline-secondary" for="file-upload">Browse</label>
-                        <input type="file" class="d-none" id="file-upload" onchange="displayFilePath()">
-                    </div>
-                </div>
-            </div>
+        <form action="#" class="d-flex flex-column gap-2 h-100" enctype="multipart/form-data" method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
             <div class="row mt-2">
                 <div class="col-3"></div>
                 <div class="col-9 d-flex flex-column w-50 align-items-start">
@@ -82,11 +23,3 @@
         </form>
     </div>
 {% endblock %}
-
-<script>
-    function displayFilePath() {
-        const fileInput = document.getElementById("file-upload");
-        const filePath = document.getElementById("file-path");
-        filePath.value = fileInput.files[0]?.name || "";
-    }
-</script>

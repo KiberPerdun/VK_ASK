@@ -1,57 +1,98 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
 
-{% block title %}
-    <title>Questions List</title>
-{% endblock %}
-
 {% block content_name %}
-    <h1>All Questions</h1>
+<h1 class="text-center text-light fw-bold mb-4">Все вопросы</h1>
 {% endblock %}
 
 {% block content %}
-    <div class="col-9">
-        <div class="d-flex flex-column gap-3">
-            {% for question in questions %}
-                {% include 'layouts/question.html' %}
-            {% endfor %}
-        </div>
+<div class="col-lg-9 mx-auto">
 
-        <nav class="mt-3">
+    {% if selected_tag %}
+    <div class="alert alert-warning text-center">
+        📌 Фильтр: Вопросы с тегом <strong>#{{ selected_tag }}</strong>
+        <a class="btn btn-sm btn-outline-danger ms-3" href="{% url 'QuestionsList' %}">Сбросить</a>
+    </div>
+    {% endif %}
+
+    {% if search_query %}
+    <div class="alert alert-info text-center">
+        🔍 Результаты поиска по запросу: <strong>"{{ search_query }}"</strong>
+        <a class="btn btn-sm btn-outline-danger ms-3" href="{% url 'QuestionsList' %}">Сбросить поиск</a>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-center align-items-center mb-4">
+        <span class="me-3 text-light fs-5">Сортировать:</span>
+        <a class="btn btn-outline-light me-2 {% if request.GET.sort == 'new' or not request.GET.sort %}active{% endif %}"
+           href="?sort=new{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+            🆕 По новизне
+        </a>
+        <a class="btn btn-outline-light me-2 {% if request.GET.sort == 'popular' %}active{% endif %}"
+           href="?sort=popular{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+            🔥 По популярности
+        </a>
+    </div>
+
+    <div class="d-flex flex-column gap-4">
+        {% for question in page_obj %}
+        {% include "layouts/question.html" with question=question %}
+        {% endfor %}
+    </div>
+
+    <nav class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">&laquo;&laquo; Первая</a>
+                        <a class="page-link bg-dark text-light border-secondary"
+                           href="?page=1{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                            &laquo;&laquo; Первая
+                        </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; Предыдущая</a>
+                        <a class="page-link bg-dark text-light border-secondary"
+                           href="?page={{ page_obj.previous_page_number }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                            &lsaquo; Предыдущая
+                        </a>
                     </li>
                 {% endif %}
 
                 {% for num in page_obj.paginator.page_range %}
                     {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
                         <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            <a class="page-link bg-dark text-light border-secondary {% if num == page_obj.number %}fw-bold{% endif %}"
+                               href="?page={{ num }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                                {{ num }}
+                            </a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая &rsaquo;</a>
+                        <a class="page-link bg-dark text-light border-secondary"
+                           href="?page={{ page_obj.next_page_number }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                            Следующая &rsaquo;
+                        </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;&raquo;</a>
+                        <a class="page-link bg-dark text-light border-secondary"
+                           href="?page={{ page_obj.paginator.num_pages }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                            Последняя &raquo;&raquo;
+                        </a>
                     </li>
                 {% endif %}
             </ul>
         </nav>
-
-        <form method="get" class="d-flex justify-content-center align-items-center mt-3">
-            <label for="page-input" class="me-2">Перейти на страницу:</label>
-            <input type="number" id="page-input" name="page" min="1" max="{{ page_obj.paginator.num_pages }}"
-                   class="form-control me-2" style="width: 80px;" placeholder="1">
-            <button type="submit" class="btn btn-primary">Перейти</button>
-        </form>
-    </div>
+    <form class="d-flex justify-content-center align-items-center mt-3" method="get">
+        <input name="sort" type="hidden" value="{{ request.GET.sort }}">
+        {% if selected_tag %}
+        <input name="tag" type="hidden" value="{{ selected_tag }}">
+        {% endif %}
+        <label class="me-2" for="page-input">Перейти на страницу:</label>
+        <input class="form-control me-2" id="page-input" max="{{ page_obj.paginator.num_pages }}" min="1" name="page"
+               placeholder="1" style="width: 80px;" type="number">
+        <button class="btn btn-primary" type="submit">Перейти</button>
+    </form>
+</div>
 {% endblock %}

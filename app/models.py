@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db import models
+from django.db.models import Count, Q
 
 
 class Profile(models.Model):
@@ -19,11 +19,25 @@ class Tag(models.Model):
 
 
 class QuestionManager(models.Manager):
-    def best(self):
-        return self.annotate(likes_count=Count("questionlike")).order_by("-likes_count", "-created_at")
+    def popular(self):
+        return self.annotate(
+            likes_count=Count('likes', filter=Q(likes__is_like=True)),
+            dislikes_count=Count('likes', filter=Q(likes__is_like=False)),
+            like_difference=(
+                    Count('likes', filter=Q(likes__is_like=True)) -
+                    Count('likes', filter=Q(likes__is_like=False))
+            )
+        ).order_by('-like_difference', '-created_at')
 
     def newest(self):
-        return self.order_by("-created_at")
+        return self.annotate(
+            likes_count=Count('likes', filter=Q(likes__is_like=True)),
+            dislikes_count=Count('likes', filter=Q(likes__is_like=False)),
+            like_difference=(
+                    Count('likes', filter=Q(likes__is_like=True)) -
+                    Count('likes', filter=Q(likes__is_like=False))
+            )
+        ).order_by('-created_at')
 
 
 class Question(models.Model):
@@ -50,25 +64,27 @@ class Answer(models.Model):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Answer to {self.question.title} by {self.author.username}"
+        return f"Ответ на {self.question.title} от {self.author.username}"
 
 
 class QuestionLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="question_likes")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
+    is_like = models.BooleanField(default=True)  # True - Like, False - Dislike
 
     class Meta:
         unique_together = ("user", "question")
 
     def __str__(self):
-        return f"{self.user.username} likes {self.question.title}"
+        return f"{self.user.username} лайкает {self.question.title}"
 
 
 class AnswerLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="answer_likes")
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
+    is_like = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.user.username} likes an answer to {self.answer.question.title}"
+        return f"{self.user.username} лайков {self.answer.question.title}"

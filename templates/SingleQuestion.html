@@ -6,45 +6,187 @@
 {% endblock %}
 
 {% block content %}
-    <div class="col-9" style="height: 70vh;">
-        {% include 'layouts/question.html' %}
+<div class="col-lg-9 mx-auto mt-4">
 
-        <div>
-            <h4>Answers</h4>
-            {% for answer in question.answers.all %}
-                <div class="card w-100 mb-3">
+    <div class="bg-dark text-white p-4 rounded shadow-lg border border-secondary">
+        <div class="row">
+            <div class="col-md-2 text-center">
+                <div class="border rounded-circle overflow-hidden mx-auto mb-3" style="width: 80px; height: 80px;">
+                    <img alt="Avatar"
+                         class="img-fluid"
+                         src="{{ question.author.profile.avatar|default:'/static/img/photo.jpg' }}"
+                         style="object-fit: cover; width: 100%; height: 100%;">
+                </div>
+                <small class="text-warning fw-bold">{{ question.author.username }}</small>
+            </div>
+
+            <div class="col-md-10">
+                <h2 class="text-warning fw-bold">{{ question.title }}</h2>
+                <p class="fs-5">{{ question.text }}</p>
+
+                <div class="d-flex flex-wrap gap-3 text-light mb-3">
+                    <div class="mb-2">
+    <span class="badge bg-success me-1" id="likes-count-{{ question.id }}">
+        👍 {{ question.likes_count|default:"0" }}
+    </span>
+                        <span class="badge bg-danger me-1" id="dislikes-count-{{ question.id }}">
+        👎 {{ question.dislikes_count|default:"0" }}
+    </span>
+                        <span class="badge bg-warning me-1" id="like-diff-{{ question.id }}">
+        🤝 {{ question.like_difference|default:"0" }}
+    </span>
+                    </div>
+
+                    <span>📅 {{ question.created_at|date:"d M Y H:i" }}</span>
+                    <span id="answer-counter">💬 Ответов: {{ question.answers.count }}</span>
+                </div>
+
+                {% if user.is_authenticated %}
+                <button class="btn btn-sm btn-outline-success like-btn"
+                        data-like-type="like" data-qid="{{ question.id }}">
+                    👍 Лайк
+                </button>
+                <button class="btn btn-sm btn-outline-danger dislike-btn"
+                        data-like-type="dislike" data-qid="{{ question.id }}">
+                    👎 Дизлайк
+                </button>
+                {% endif %}
+
+                <div class="mt-3">
+                    <strong>🏷 Теги:</strong>
+                    {% for tag in question.tags.all %}
+                    <a class="badge bg-primary text-white text-decoration-none"
+                       href="{% url 'QuestionsList' %}?tag={{ tag.name }}{% if sort %}&sort={{ sort }}{% endif %}">
+                        #{{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-secondary">
+
+    <h4 class="text-warning fw-bold mt-4">🗨 Ответы</h4>
+    <div id="answers-container">
+        {% for answer in question.answers.all %}
+        <div class="card bg-dark text-light w-100 mb-3 border border-secondary shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                        <div class="border rounded-circle overflow-hidden mx-auto mb-2"
+                             style="width: 80px; height: 80px;">
+                            <img alt="Avatar"
+                                 class="img-fluid"
+                                 src="{{ answer.author.profile.avatar|default:'/static/img/photo.jpg' }}"
+                                 style="object-fit: cover; width: 100%; height: 100%;">
+                        </div>
+                        <small class="d-block text-warning">{{ answer.author.username }}</small>
+                    </div>
+                    <div class="col-md-10">
+                        <p class="card-text fs-5">{{ answer.text }}</p>
+                        <small class="text-muted">📅 {{ answer.created_at|date:"d M Y H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-light">❌ Пока нет ответов, стань первым!</p>
+        {% endfor %}
+    </div>
+
+    <hr class="border-secondary">
+
+    <h4 class="text-warning fw-bold mt-4">📝 Оставить ответ</h4>
+    <form class="shadow-lg p-4 rounded border border-secondary bg-dark" id="answer-form">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+        <textarea class="form-control bg-dark text-white border-warning" name="text"
+                  placeholder="Напишите ваш ответ здесь..."
+                  required rows="4"></textarea>
+        </div>
+        <div class="text-end">
+            <button class="btn btn-warning btn-lg fw-bold">🚀 Опубликовать</button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let questionId = "{{ question.id }}";
+
+        fetch(`/question/${questionId}/get_likes_data/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById(`likes-count-${questionId}`).textContent = `👍 ${data.likes_count}`;
+                document.getElementById(`dislikes-count-${questionId}`).textContent = `👎 ${data.dislikes_count}`;
+                document.getElementById(`like-diff-${questionId}`).textContent = `🤝 ${data.like_difference}`;
+            })
+            .catch(error => console.error("Ошибка загрузки лайков:", error));
+    });
+</script>
+
+<script>
+
+
+    document.querySelector("#answer-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let form = this;
+        let formData = new FormData(form);
+        let questionId = "{{ question.id }}";
+
+        fetch(`/question/${questionId}/post_answer/`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let answersContainer = document.querySelector("#answers-container");
+                    let answerCounter = document.querySelector("#answer-counter");
+
+                    let newAnswer = `
+                <div class="card bg-dark text-light w-100 mb-3 border border-secondary shadow-sm">
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-3 d-flex align-items-center">
-                                <div class="border mb-2" style="height: 100px; width: 100px; overflow: hidden; border-radius: 50%;">
-                                    <img src="{{ answer.author.profile.avatar|default:'/static/img/default-avatar.png' }}"
-                                         alt="Avatar" class="img-fluid"
-                                         style="object-fit: cover; height: 100%; width: 100%;">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div class="border rounded-circle overflow-hidden mx-auto mb-2" style="width: 80px; height: 80px;">
+                                    <img src="${data.avatar}" alt="Avatar" class="img-fluid" style="object-fit: cover; width: 100%; height: 100%;">
                                 </div>
+                                <small class="d-block text-warning">${data.author}</small>
                             </div>
-
-                            <div class="col-9">
-                                <p class="card-text">{{ answer.text }}</p>
-                                <small>By {{ answer.author.username }} on {{ answer.created_at }}</small>
+                            <div class="col-md-10">
+                                <p class="card-text fs-5">${data.text}</p>
+                                <small class="text-muted">📅 ${data.created_at}</small>
                             </div>
                         </div>
                     </div>
                 </div>
-            {% empty %}
-                <p>Пока нет ответа, стань первым!</p>
-            {% endfor %}
-        </div>
+            `;
 
-        <hr>
+                    answersContainer.insertAdjacentHTML("beforeend", newAnswer);
+                    form.reset();
 
-        <form action="#" method="POST" class="d-flex flex-column gap-2 h-100">
-            <div class="input-group flex-nowrap flex-grow-3">
-                <textarea class="form-control" name="title" placeholder="Поле ввода ответа.."
-                          aria-label="Title" aria-describedby="addon-wrapping-title"></textarea>
-            </div>
-            <div>
-                <button class="btn btn-outline-success" type="submit">Поделиться ответом</button>
-            </div>
-        </form>
-    </div>
+                    if (answerCounter) {
+                        answerCounter.textContent = `💬 Ответов: ${data.total_answers}`;
+                    }
+                } else {
+                    alert(data.error || "Ошибка при отправке ответа!");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+    });
+</script>
+
+
 {% endblock %}
