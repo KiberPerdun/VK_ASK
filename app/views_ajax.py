@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
-from .models import Question, QuestionLike, Answer, Tag
+from .models import Question, QuestionLike, Answer, Tag, AnswerLike
 
 
 @require_POST
@@ -71,30 +71,29 @@ def mark_correct(request):
 @require_POST
 @login_required
 def post_answer(request, question_id):
-    text = request.POST.get('text', '').strip()
-    question = get_object_or_404(Question, id=question_id)
+    if request.method == "POST":
+        question = get_object_or_404(Question, id=question_id)
+        text = request.POST.get("text")
 
-    if text:
+        if not text:
+            return JsonResponse({"success": False, "error": "Ответ не может быть пустым."})
+
         answer = Answer.objects.create(
             text=text,
             author=request.user,
-            question=question,
-            created_at=now()
+            question=question
         )
 
-        avatar_url = request.user.profile.avatar.url if request.user.profile.avatar else '/static/img/photo.jpg'
-        total_answers = question.answers.count()
-
         return JsonResponse({
-            'success': True,
-            'author': request.user.username,
-            'avatar': avatar_url,
-            'text': answer.text,
-            'created_at': answer.created_at.strftime("%d %b %Y %H:%M"),
-            'total_answers': total_answers
+            "success": True,
+            "answer_id": answer.id,
+            "text": answer.text,
+            "created_at": answer.created_at.strftime("%d %b %Y %H:%M"),
+            "author": answer.author.username,
+            "avatar": answer.author.profile.avatar.url if answer.author.profile.avatar else "/static/img/photo.jpg",
+            "is_author": request.user == question.author,
+            "total_answers": question.answers.count()
         })
-
-    return JsonResponse({'success': False, 'error': "Текст ответа не может быть пустым!"}, status=400)
 
 
 @require_GET
@@ -163,3 +162,72 @@ def submit_question(request):
         })
 
     return JsonResponse({"success": False, "error": "Некорректный запрос!"})
+
+
+@login_required
+@require_POST
+def select_correct_answer(request, question_id, answer_id):
+    question = get_object_or_404(Question, id=question_id)
+    answer = get_object_or_404(Answer, id=answer_id, question=question)
+
+    if request.user != question.author:
+        return JsonResponse({"error": "Вы не являетесь автором вопроса"}, status=403)
+
+    question.correct_answer = answer
+    question.save()
+
+    return JsonResponse({"success": True, "correct_answer_id": answer.id})
+
+
+@login_required
+def toggle_answer_like(request, answer_id):
+    if request.method == "POST":
+        answer = get_object_or_404(Answer, id=answer_id)
+        is_like = request.POST.get("is_like") == "true"
+
+        existing_like = AnswerLike.objects.filter(user=request.user, answer=answer).first()
+
+        if existing_like:
+            if existing_like.is_like == is_like:
+                existing_like.delete()
+                user_liked = False
+                user_disliked = False
+
+            else:
+                existing_like.is_like = is_like
+                existing_like.save()
+                user_liked = is_like
+                user_disliked = not is_like
+
+        else:
+            AnswerLike.objects.create(user=request.user, answer=answer, is_like=is_like)
+            user_liked = is_like
+            user_disliked = not is_like
+
+        likes_count = AnswerLike.objects.filter(answer=answer, is_like=True).count()
+        dislikes_count = AnswerLike.objects.filter(answer=answer, is_like=False).count()
+
+        return JsonResponse({
+            "success": True,
+            "likes_count": likes_count,
+            "dislikes_count": dislikes_count,
+            "user_liked": user_liked,
+            "user_disliked": user_disliked
+        })
+
+    return JsonResponse({"success": False, "error": "Некорректный запрос"}, status=400)
+
+
+from django.db.models import Count, Q
+
+
+def get_likes_data_answers(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+
+    answers = question.answers.annotate(
+        likes_count=Count('likes', filter=Q(likes__is_like=True)),
+        dislikes_count=Count('likes', filter=Q(likes__is_like=False))
+    ).values("id", "likes_count", "dislikes_count")
+
+    return JsonResponse({"success": True, "answers": list(answers)})
+

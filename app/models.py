@@ -46,6 +46,7 @@ class Question(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="questions")
     tags = models.ManyToManyField(Tag, related_name="questions")
+    correct_answer = models.OneToOneField('Answer', on_delete=models.SET_NULL, null=True, blank=True, related_name="correct_for_question")
 
     objects = QuestionManager()
 
@@ -55,6 +56,18 @@ class Question(models.Model):
     def get_absolute_url(self):
         return f"/question/{self.id}/"
 
+    def set_correct_answer(self, answer):
+        if answer.question == self:
+            self.correct_answer = answer
+            self.save()
+
+
+class AnswerManager(models.Manager):
+    def with_likes(self):
+        return self.annotate(
+            likes_count=Count('likes', filter=Q(likes__is_like=True)),
+            dislikes_count=Count('likes', filter=Q(likes__is_like=False))
+        )
 
 class Answer(models.Model):
     text = models.TextField()
@@ -63,8 +76,16 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
     is_correct = models.BooleanField(default=False)
 
+    objects = AnswerManager()
+
     def __str__(self):
         return f"Ответ на {self.question.title} от {self.author.username}"
+
+    def like_count(self):
+        return self.likes.filter(is_like=True).count()
+
+    def dislike_count(self):
+        return self.likes.filter(is_like=False).count()
 
 
 class QuestionLike(models.Model):
@@ -84,7 +105,11 @@ class AnswerLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="answer_likes")
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
-    is_like = models.BooleanField(default=True)
+    is_like = models.BooleanField(default=True)  # True - Like, False - Dislike
+
+    class Meta:
+        unique_together = ("user", "answer")  # Один пользователь — один лайк на ответ
 
     def __str__(self):
-        return f"{self.user.username} лайков {self.answer.question.title}"
+        return f"{self.user.username} {'лайкнул' if self.is_like else 'дизлайкнул'} {self.answer.question.title}"
+

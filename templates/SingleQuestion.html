@@ -14,7 +14,7 @@
                 <div class="border rounded-circle overflow-hidden mx-auto mb-3" style="width: 80px; height: 80px;">
                     <img alt="Avatar"
                          class="img-fluid"
-                         src="{{ question.author.profile.avatar|default:'/static/img/photo.jpg' }}"
+                         src="{{ question.author.profile.avatar.url|default:'/static/img/photo.jpg' }}"
                          style="object-fit: cover; width: 100%; height: 100%;">
                 </div>
                 <small class="text-warning fw-bold">{{ question.author.username }}</small>
@@ -69,31 +69,58 @@
 
     <h4 class="text-warning fw-bold mt-4">🗨 Ответы</h4>
     <div id="answers-container">
-        {% for answer in question.answers.all %}
-        <div class="card bg-dark text-light w-100 mb-3 border border-secondary shadow-sm">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-2 text-center">
-                        <div class="border rounded-circle overflow-hidden mx-auto mb-2"
-                             style="width: 80px; height: 80px;">
-                            <img alt="Avatar"
-                                 class="img-fluid"
-                                 src="{{ answer.author.profile.avatar|default:'/static/img/photo.jpg' }}"
-                                 style="object-fit: cover; width: 100%; height: 100%;">
-                        </div>
-                        <small class="d-block text-warning">{{ answer.author.username }}</small>
+{% for answer in question.answers.all %}
+    <div class="card bg-dark text-light w-100 mb-3 border border-secondary shadow-sm">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <div class="border rounded-circle overflow-hidden mx-auto mb-2" style="width: 80px; height: 80px;">
+                        <img alt="Avatar"
+                             class="img-fluid"
+                             src="{{ answer.author.profile.avatar.url|default:'/static/img/photo.jpg' }}"
+                             style="object-fit: cover; width: 100%; height: 100%;">
                     </div>
-                    <div class="col-md-10">
-                        <p class="card-text fs-5">{{ answer.text }}</p>
-                        <small class="text-muted">📅 {{ answer.created_at|date:"d M Y H:i" }}</small>
-                    </div>
+                    <small class="d-block text-warning">{{ answer.author.username }}</small>
+                </div>
+                <div class="col-md-8">
+                    <p class="card-text fs-5">{{ answer.text }}</p>
+                    <small class="text-muted">📅 {{ answer.created_at|date:"d M Y H:i" }}</small>
+                </div>
+                <div class="col-md-2 text-end">
+                    {% if user.is_authenticated %}
+                        <button class="btn btn-sm btn-outline-success answer-like-btn"
+                                data-like-type="like" data-answer-id="{{ answer.id }}">
+                            👍 <span id="answer-likes-count-{{ answer.id }}">{{ answer.likes_count }}</span>
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-danger answer-dislike-btn"
+                                data-like-type="dislike" data-answer-id="{{ answer.id }}">
+                            👎 <span id="answer-dislikes-count-{{ answer.id }}">{{ answer.dislikes_count }}</span>
+                        </button>
+
+                        {% if user == question.author %}
+                            <button class="btn btn-outline-success btn-sm select-correct-answer"
+                                    data-question-id="{{ question.id }}"
+                                    data-answer-id="{{ answer.id }}"
+                                    {% if question.correct_answer and question.correct_answer.id == answer.id %}disabled{% endif %}>
+                                {% if question.correct_answer and question.correct_answer.id == answer.id %}
+                                    ✅ Выбран
+                                {% else %}
+                                    Выбрать
+                                {% endif %}
+                            </button>
+                        {% elif question.correct_answer and question.correct_answer.id == answer.id %}
+                            <span class="badge bg-success">✅ Правильный ответ</span>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
         </div>
+    </div>
         {% empty %}
         <p class="text-center text-light">❌ Пока нет ответов, стань первым!</p>
-        {% endfor %}
     </div>
+            {% endfor %}
 
     <hr class="border-secondary">
 
@@ -133,8 +160,6 @@
 </script>
 
 <script>
-
-
     document.querySelector("#answer-form").addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -149,13 +174,13 @@
                 "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
             }
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    let answersContainer = document.querySelector("#answers-container");
-                    let answerCounter = document.querySelector("#answer-counter");
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let answersContainer = document.querySelector("#answers-container");
+                let answerCounter = document.querySelector("#answer-counter");
 
-                    let newAnswer = `
+                let newAnswer = `
                 <div class="card bg-dark text-light w-100 mb-3 border border-secondary shadow-sm">
                     <div class="card-body">
                         <div class="row align-items-center">
@@ -165,26 +190,220 @@
                                 </div>
                                 <small class="d-block text-warning">${data.author}</small>
                             </div>
-                            <div class="col-md-10">
+                            <div class="col-md-8">
                                 <p class="card-text fs-5">${data.text}</p>
                                 <small class="text-muted">📅 ${data.created_at}</small>
                             </div>
+                            <div class="col-md-2 text-end">
+                                ${data.is_author ? `
+                                    <button class="btn btn-outline-success btn-sm select-correct-answer"
+                                            data-question-id="${questionId}"
+                                            data-answer-id="${data.answer_id}">
+                                        Выбрать
+                                    </button>
+                                ` : ""}
+                                <button class="btn btn-sm btn-outline-success answer-like-btn"
+                                        data-like-type="like" data-answer-id="${data.answer_id}">
+                                    👍 <span id="answer-likes-count-${data.answer_id}">0</span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger answer-dislike-btn"
+                                        data-like-type="dislike" data-answer-id="${data.answer_id}">
+                                    👎 <span id="answer-dislikes-count-${data.answer_id}">0</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
 
-                    answersContainer.insertAdjacentHTML("beforeend", newAnswer);
-                    form.reset();
+                answersContainer.insertAdjacentHTML("beforeend", newAnswer);
+                form.reset();
 
-                    if (answerCounter) {
-                        answerCounter.textContent = `💬 Ответов: ${data.total_answers}`;
+                if (answerCounter) {
+                    answerCounter.textContent = `💬 Ответов: ${data.total_answers}`;
+                }
+
+                attachLikeHandlers();
+                attachCorrectAnswerHandlers();
+            } else {
+                alert(data.error || "Ошибка при отправке ответа!");
+            }
+        })
+        .catch(error => console.error("Ошибка:", error));
+    });
+
+    function attachHandlers() {
+        document.querySelectorAll(".answer-like-btn, .answer-dislike-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let answerId = this.getAttribute("data-answer-id");
+                let isLike = this.getAttribute("data-like-type") === "like";
+                let url = `/answer/${answerId}/toggle_like/`;
+
+                let formData = new FormData();
+                formData.append("is_like", isLike);
+
+                fetch(url, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
                     }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`answer-likes-count-${answerId}`).textContent = data.likes_count;
+                        document.getElementById(`answer-dislikes-count-${answerId}`).textContent = data.dislikes_count;
+
+                        let likeButton = document.querySelector(`.answer-like-btn[data-answer-id="${answerId}"]`);
+                        let dislikeButton = document.querySelector(`.answer-dislike-btn[data-answer-id="${answerId}"]`);
+
+                        if (data.user_liked) {
+                            likeButton.classList.add("active");
+                            dislikeButton.classList.remove("active");
+                        } else if (data.user_disliked) {
+                            dislikeButton.classList.add("active");
+                            likeButton.classList.remove("active");
+                        } else {
+                            likeButton.classList.remove("active");
+                            dislikeButton.classList.remove("active");
+                        }
+                    } else {
+                        alert(data.error || "Ошибка при лайке!");
+                    }
+                })
+                .catch(error => console.error("Ошибка:", error));
+            });
+        });
+
+        document.querySelectorAll('.select-correct-answer').forEach(button => {
+            button.addEventListener('click', function () {
+                let questionId = this.getAttribute('data-question-id');
+                let answerId = this.getAttribute('data-answer-id');
+                let url = `/question/${questionId}/select_correct/${answerId}/`;
+
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.querySelectorAll('.select-correct-answer').forEach(btn => {
+                            btn.innerHTML = "Выбрать";
+                            btn.disabled = false;
+                        });
+
+                        let selectedBtn = document.querySelector(`button[data-answer-id="${data.correct_answer_id}"]`);
+                        selectedBtn.innerHTML = "✅ Выбран";
+                        selectedBtn.disabled = true;
+                    } else {
+                        alert(data.error || "Ошибка при выборе ответа!");
+                    }
+                })
+                .catch(error => console.error("Ошибка:", error));
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        attachHandlers();
+    });
+
+    function attachCorrectAnswerHandlers() {
+        document.querySelectorAll('.select-correct-answer').forEach(button => {
+            button.addEventListener('click', function () {
+                let questionId = this.getAttribute('data-question-id');
+                let answerId = this.getAttribute('data-answer-id');
+                let url = `/question/${questionId}/select_correct/${answerId}/`;
+
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.querySelectorAll('.select-correct-answer').forEach(btn => {
+                            btn.innerHTML = "Выбрать";
+                            btn.disabled = false;
+                        });
+
+                        let selectedBtn = document.querySelector(`button[data-answer-id="${data.correct_answer_id}"]`);
+                        selectedBtn.innerHTML = "✅ Выбран";
+                        selectedBtn.disabled = true;
+                    } else {
+                        alert(data.error || "Ошибка при выборе ответа!");
+                    }
+                })
+                .catch(error => console.error("Ошибка:", error));
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        attachLikeHandlers();
+        attachCorrectAnswerHandlers();
+    });
+</script>
+
+
+<script>
+    document.querySelectorAll('.select-correct-answer').forEach(button => {
+        button.addEventListener('click', function () {
+            let questionId = this.getAttribute('data-question-id');
+            let answerId = this.getAttribute('data-answer-id');
+            let url = `/question/${questionId}/select_correct/${answerId}/`;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.select-correct-answer').forEach(btn => {
+                        btn.innerHTML = "✅ Выбрать";
+                        btn.disabled = false;
+                    });
+
+                    let selectedBtn = document.querySelector(`button[data-answer-id="${data.correct_answer_id}"]`);
+                    selectedBtn.innerHTML = "✅ Выбран";
+                    selectedBtn.disabled = true;
                 } else {
-                    alert(data.error || "Ошибка при отправке ответа!");
+                    alert(data.error || "Ошибка при выборе ответа!");
                 }
             })
             .catch(error => console.error("Ошибка:", error));
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let questionId = "{{ question.id }}";
+
+        fetch(`/question/${questionId}/get_likes_data_answers/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    data.answers.forEach(answer => {
+                        document.getElementById(`answer-likes-count-${answer.id}`).textContent = answer.likes_count;
+                        document.getElementById(`answer-dislikes-count-${answer.id}`).textContent = answer.dislikes_count;
+                    });
+                }
+            })
+            .catch(error => console.error("Ошибка загрузки лайков:", error));
     });
 </script>
 

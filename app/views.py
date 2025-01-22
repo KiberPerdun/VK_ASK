@@ -8,8 +8,9 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Count, Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
 
-from .forms import RegistrationForm
+from .forms import RegistrationForm, ProfileUpdateForm
 from .models import Question, QuestionLike
 from .models import Tag, Profile
 from .utils import paginate
@@ -72,7 +73,33 @@ def BestQuestions(request):
         'best_members': active_users
     })
 
+@login_required
 def Settings(request):
+    user = request.user
+    profile = Profile.objects.get(user=user)
+
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            user.username = form.cleaned_data['username']
+            user.email = form.cleaned_data['email']
+            avatar = form.cleaned_data.get('avatar')
+
+            if avatar:
+                if avatar.content_type not in ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']:
+                    messages.error(request, "Можно загружать только изображения (JPEG, PNG, GIF, BMP, WebP).")
+                    return redirect('Settings')
+
+                user.profile.avatar = avatar
+
+            user.save()
+            user.profile.save()
+            messages.success(request, "Настройки обновлены!")
+            return redirect('Settings')
+
+    else:
+        form = ProfileUpdateForm(instance=user)
+
     active_users = User.objects.annotate(
         num_questions=models.Count('questions'),
         num_answers=models.Count('answers')
@@ -81,6 +108,7 @@ def Settings(request):
     popular_tags = Tag.objects.annotate(num_questions=Count('questions')).order_by('-num_questions')[:10]
 
     return render(request, "Settings.html", {
+        'form': form,
         'popular_tags': popular_tags,
         'best_members': active_users,
     })

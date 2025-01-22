@@ -40,4 +40,8 @@ urlpatterns = [
                   path("get_tags/", views_ajax.get_tags, name="get_tags"),
                   path("add_tag/", views_ajax.add_tag, name="add_tag"),
                   path("submit_question/", views_ajax.submit_question, name="submit_question"),
+                  path('question/<int:question_id>/select_correct/<int:answer_id>/', views_ajax.select_correct_answer,
+                       name='select_correct_answer'),
+                  path('answer/<int:answer_id>/toggle_like/', views_ajax.toggle_answer_like, name='toggle_answer_like'),
+                  path('question/<int:question_id>/get_likes_data_answers/', views_ajax.get_likes_data_answers, name='get_likes_data_answers'),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
