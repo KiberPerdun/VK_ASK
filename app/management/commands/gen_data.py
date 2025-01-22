@@ -64,10 +64,8 @@ class Command(BaseCommand):
             if response.status_code == 200:
                 avatar_file = ContentFile(response.content)
 
-                # Save the file and get the relative path
                 avatar_path = fs.save(avatar_name, avatar_file)
 
-                # Only store relative path in the Profile model
                 profile = Profile(user=user, avatar=avatar_path)
 
                 profiles.append(profile)

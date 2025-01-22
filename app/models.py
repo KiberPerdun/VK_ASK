@@ -46,7 +46,8 @@ class Question(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="questions")
     tags = models.ManyToManyField(Tag, related_name="questions")
-    correct_answer = models.OneToOneField('Answer', on_delete=models.SET_NULL, null=True, blank=True, related_name="correct_for_question")
+    correct_answer = models.OneToOneField('Answer', on_delete=models.SET_NULL, null=True, blank=True,
+                                          related_name="correct_for_question")
 
     objects = QuestionManager()
 
