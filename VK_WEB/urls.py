@@ -44,4 +44,4 @@ urlpatterns = [
                        name='select_correct_answer'),
                   path('answer/<int:answer_id>/toggle_like/', views_ajax.toggle_answer_like, name='toggle_answer_like'),
                   path('question/<int:question_id>/get_likes_data_answers/', views_ajax.get_likes_data_answers, name='get_likes_data_answers'),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
